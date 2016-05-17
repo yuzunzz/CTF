@@ -1,19 +1,13 @@
 {% extends "base.html" %}
 {% block head %}
-<script src="{{ url_for('static', filename='js/tooltip.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/ctf.css') }}">
 {{super()}}
 {% endblock %}
 {% block page_content %}
     {% if current_user.is_authenticated() %}
-    <div class="container">
-    <div class="row">
     <div class="alert alert-info">
-    Hello, <strong>{{ current_user.username }}</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Your rank is {{ranking}}<span class="pull-right badge badge-info">
+    Hello, <strong>{{ current_user.username }}</strong>&nbsp;&nbsp;&nbsp;Your rank is {{ranking}}<span class="pull-right badge badge-info">
     {{ current_user.score }}</span>
-    </div>
-    </div>
     </div>
     {% endif %}
 
@@ -23,7 +17,8 @@
   				<div class="col-md-2">
   				</div>
   				<div id="bodytd" class="col-md-8"><br><br>
-            {% set list = ['#57d833' , '#564aee', '#8e43c9', '#ffa800', '#ea0221']%}
+            <!-- 题目的背景颜色列表 -->
+            {% set list = ['#564A80','#B452CD']%}
             {% for challenge in challenges %}
             {% if challenge.score|int < 300 %}
             <a href='/challenges/{{challenge.name}}' class='tile {{ 'solved' if challenge.name in current_user.solved else '' }}' style='background-color: {{ list|random }}; text-decoration: none'>
