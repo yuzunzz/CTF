@@ -18,8 +18,8 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
 import datetime
-# from flask.ext.mail import Message
-# from flask_mail import Mail
+from flask.ext.mail import Message
+from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
 app = Flask('__name__')
 app.config.from_object('config')
@@ -29,33 +29,33 @@ login_manager.init_app(app)
 Bootstrap(app)
 app.config['BOOTSTRAP_SERVE_LOCAL'] = True
 admin = Admin(app)
-# mail = Mail(app)
+mail = Mail(app)
 
-# def generate_confirmation_token(email):
-#     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-#     return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=app.config['SECURITY_PASSWORD_SALT'])
 
 
-# def confirm_token(token, expiration=3600):
-#     serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
-#     try:
-#         email = serializer.loads(
-#             token,
-#             salt=app.config['SECURITY_PASSWORD_SALT'],
-#             max_age=expiration
-#         )
-#     except:
-#         return False
-#     return email
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(
+            token,
+            salt=app.config['SECURITY_PASSWORD_SALT'],
+            max_age=expiration
+        )
+    except:
+        return False
+    return email
 
-# def send_email(to, subject, template):
-#     msg = Message(
-#         subject,
-#         recipients=[to],
-#         html=template,
-#         sender=app.config['MAIL_DEFAULT_SENDER']
-#     )
-#     mail.send(msg)
+def send_email(to, subject, template):
+    msg = Message(
+        subject,
+        recipients=[to],
+        html=template,
+        sender=app.config['MAIL_DEFAULT_SENDER']
+    )
+    mail.send(msg)
 
 # Create customized model view class
 class MyModelView(sqla.ModelView):
@@ -92,7 +92,7 @@ class User(UserMixin, db.Model):
     score = db.Column(db.String(20))
     solved = db.Column(db.String(400))
     lastSubmit = db.Column(db.DateTime)
-    confirmed = db.Column(db.Boolean, nullable=True, default=True)
+    confirmed = db.Column(db.Boolean, nullable=False, default=False)
 
     @property
     def password(self):
@@ -196,31 +196,31 @@ def register():
 		       solved='*')
 	db.session.add(user)
 	db.session.commit()
-        # token = generate_confirmation_token(form.email.data)
-        # confirm_url = url_for('confirm_email', token=token, _external=True)
-        # html = render_template('email.html', confirm_url=confirm_url)
-        # subject = "Please confirm your email"
-        # send_email(form.email.data, subject, html)
-        # flash('A confirmation email has been sent via email.', 'success')
+        token = generate_confirmation_token(form.email.data)
+        confirm_url = url_for('confirm_email', token=token, _external=True)
+        html = render_template('email.html', confirm_url=confirm_url)
+        subject = "Please confirm your email"
+        send_email(form.email.data, subject, html)
+        flash('A confirmation email has been sent via email.', 'success')
         flash('Regeist success.', 'success')
         return redirect(url_for('index'))
     return render_template('register.html', form=form)
 
-# @app.route('/confirm/<token>')
-# def confirm_email(token):
-#     try:
-#         email = confirm_token(token)
-#     except:
-#         flash('The confirmation link is invalid or has expired.', 'danger')
-#     user = User.query.filter_by(email=email).first_or_404()
-#     if user.confirmed:
-#         flash('Account already confirmed. Please login.', 'success')
-#     else:
-#         user.confirmed = True
-#         db.session.add(user)
-#         db.session.commit()
-#         flash('You have confirmed your account. Thanks!', 'success')
-#     return redirect(url_for('login'))
+@app.route('/confirm/<token>')
+def confirm_email(token):
+    try:
+        email = confirm_token(token)
+    except:
+        flash('The confirmation link is invalid or has expired.', 'danger')
+    user = User.query.filter_by(email=email).first_or_404()
+    if user.confirmed:
+        flash('Account already confirmed. Please login.', 'success')
+    else:
+        user.confirmed = True
+        db.session.add(user)
+        db.session.commit()
+        flash('You have confirmed your account. Thanks!', 'success')
+    return redirect(url_for('login'))
 
 
 @app.route('/login', methods=['GET', 'POST'])
