@@ -67,6 +67,9 @@ class MyModelView(sqla.ModelView):
         if current_user.username == "yuzunzz":
             return True
 
+        if current_user.username == "beer":
+            return True
+
         return False
 
     def _handle_view(self, name, **kwargs):
