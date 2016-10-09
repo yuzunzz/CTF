@@ -18,7 +18,7 @@
   				</div>
   				<div id="bodytd" class="col-md-8"><br><br>
             <!-- 题目的背景颜色列表 -->
-            {% set list = ['#564A80','#B452CD']%}
+            {% set list = ['#B452CD','#428bca','#5cb85c','#5bc0de','#f0ad4e','#d9534f']%}
             {% for challenge in challenges %}
             {% if challenge.score|int < 300 %}
             <a href='/challenges/{{challenge.name}}' class='tile {{ 'solved' if challenge.name in current_user.solved else '' }}' style='background-color: {{ list|random }}; text-decoration: none'>

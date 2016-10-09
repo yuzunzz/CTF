@@ -3,37 +3,48 @@
 {% block title %}o00o CTF {% endblock %}
 {% block head %}
 <link rel="shortcut icon" href="{{ url_for('static',filename='favicon.ico')}}">
+<style type="text/css">
+    #canvas-wrap { position:relative;}
+    #canvas-wrap canvas { position:absolute; top:0; left:0; z-index:0 }
+    #footer { position: absolute;bottom: 0;padding: 10px 0;background-color: #333333;width: 100%; color: #9D9D9D;text-align: center; }
+</style>
 {{super()}}
 {% endblock %}
+{% block body %}
+<div id="canvas-wrap">
+<canvas id="Mycanvas"></canvas>
 {% block navbar %}
-<div class="navbar navbar-inverse" role="navigation">
-    <div class="container">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="{{ url_for('index') }}">o00o CTF </a>
-        </div>
-        <div class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="{{ url_for('index') }}">Home</a></li>
-                <li><a href="{{ url_for('rules') }}">Rules</a></li>
-                <li><a href="{{ url_for('scoreboard') }}">Scoreboard</a></li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                {% if current_user.is_authenticated() %}
-                <li><a href="{{ url_for('logout') }}">Log Out</a></li>
-                {% else %}
-                <li><a href="{{ url_for('register') }}">Register</a></li>
-                <li><a href="{{ url_for('login') }}">Log In</a></li>
-                {% endif %}
-            </ul>
-        </div>
+<nav class="navbar navbar-default" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="{{ url_for('index') }}">o00o CTF</a>
     </div>
-</div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li><a href="{{ url_for('index') }}">Home</a></li>
+        <li><a href="{{ url_for('rules') }}">Rules</a></li>
+        <li><a href="{{ url_for('scoreboard') }}">Scoreboard</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        {% if current_user.is_authenticated() %}
+        <li><a href="{{ url_for('logout') }}">Log Out</a></li>
+        {% else %}
+        <li><a href="{{ url_for('register') }}">Register</a></li>
+        <li><a href="{{ url_for('login') }}">Log In</a></li>
+        {% endif %}
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
 {% endblock %}
 
 {% block content %}
@@ -49,14 +60,19 @@
 </div>
 {% endblock %}
 
+</div>
+
+
+
 {% block scripts %}
-<!-- <script src="{{ url_for('static', filename='js/jquery.js') }}"></script>
-<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script> -->
+
 {{super()}}
+<script src="/static/js/particle.js"></script>
 <script type="text/javascript">
                 $('.tabbable a').click(function (e) {
                         e.preventDefault();
                         $(this).tab('show');
                 })
 </script>
+{% endblock %}
 {% endblock %}

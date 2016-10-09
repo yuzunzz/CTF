@@ -7,30 +7,40 @@
       <div class="alert alert-info">
         <center><strong>With the same score, the winner is who submit the task first !! </strong></center>
 <br>
-<table class="table">
-            <thead>
-              <tr>
-                <td><strong>Rank</strong> </td>
-                <td><strong>Name </strong></td>
-                <td><strong>Score</strong></td>
-		            <td><strong>Winner</strong></td>
-              </tr>
-            </thead>
-            <tbody>
-                 {% for user in users %}
-                <tr>
-                  <td>{{ rank(user.username) }}</td>
-                  <td>{{ user.username }}</td>
-                  <td>{{ user.score }}</td>
-		  {% if user.lastSubmit == winnertime %}
-		  <td> The Winner </td>
-		  {% else %}
-                    <td> </td>
-		 {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-          </table>
+<div class="table-responsive">
+  <table class="table">
+    <thead>
+      <tr>
+        <td><strong>Rank</strong> </td>
+        <td><strong>Name</strong></td>
+        {% if current_user.is_authenticated() %}
+        <td><strong>RealName</strong></td>
+        <td><strong>ClassName</strong></td>
+        {% endif %}
+        <td><strong>Score</strong></td>
+        <td><strong>Winner</strong></td>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+        <tr>
+          <td>{{ rank(user.username) }}</td>
+          <td>{{ user.username}}</td>
+        {% if current_user.is_authenticated() %}
+          <td>{{ user.realname}}</td>
+          <td>{{ user.classname}}</td>
+        {% endif %}
+          <td>{{ user.score }}</td>
+        {% if user.lastSubmit == winnertime %}
+          <td> The Winner </td>
+        {% else %}
+          <td> </td>
+        {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
       </div>
       <p></p><br><br>

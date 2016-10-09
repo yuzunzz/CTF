@@ -21,6 +21,7 @@ import datetime
 from flask.ext.mail import Message
 from flask_mail import Mail
 from itsdangerous import URLSafeTimedSerializer
+from operator import attrgetter
 app = Flask('__name__')
 app.config.from_object('config')
 db = SQLAlchemy(app)
@@ -64,10 +65,7 @@ class MyModelView(sqla.ModelView):
         if not current_user.is_active() or not current_user.is_authenticated():
             return False
 
-        if current_user.username == "yuzunzz":
-            return True
-
-        if current_user.username == "beer":
+        if current_user.username == "test":
             return True
 
         return False
@@ -89,6 +87,8 @@ class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True)
+    realname = db.Column(db.String(80))
+    classname= db.Column(db.String(80))
     email = db.Column(db.String(80))
     password_hash = db.Column(db.String(120))
     school = db.Column(db.String(120))
@@ -118,7 +118,7 @@ class Challenges(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
     category = db.Column(db.String(80))
-    info = db.Column(db.String(800))
+    info = db.Column(db.String(2000))
     score = db.Column(db.String(20))
     flag = db.Column(db.String(40))
 
@@ -132,22 +132,31 @@ def load_user(user_id):
 
 
 # The context processor makes the rank function available to all templates
+# Update: Remove the administrator from the score ranking 
 @app.context_processor
 def utility_processor():
     def rank(user_name):
-        users = User.query.order_by(desc(User.score)).all()
-        myuser = User.query.filter_by(username=user_name).first()
-        l = []
+        users = User.query.filter(User.username!='test').order_by(desc(User.score)).all()
         for user in users :
+            user.score = int(user.score)
+        users_sort =sorted(users, key=attrgetter('score'),reverse=True)
+        myuser = User.query.filter_by(username=user_name).first()
+        myuser.score = int(myuser.score)
+        l = []
+        for user in users_sort :
             l.append(user.score)
         return int(l.index(myuser.score)) + 1
     return dict(rank=rank)
 
 def rank(user_name):
-    users = User.query.order_by(desc(User.score)).all()
-    myuser = User.query.filter_by(username=user_name).first()
-    l = []
+    users = User.query.filter(User.username!='test').order_by(desc(User.score)).all()
     for user in users :
+        user.score = int(user.score)
+    users_sort =sorted(users, key=attrgetter('score'),reverse=True)
+    myuser = User.query.filter_by(username=user_name).first()
+    myuser.score = int(myuser.score)
+    l = []
+    for user in users_sort :
         l.append(user.score)
     return int(l.index(myuser.score)) + 1
 
@@ -166,6 +175,8 @@ class RegistrationForm(Form):
     password = PasswordField('Password', validators=[Required()])
     password_again = PasswordField('Password again',
                                    validators=[Required(), EqualTo('password')])
+    realname = StringField()
+    classname = StringField()
     school = StringField()
     submit = SubmitField('Register')
 
@@ -174,11 +185,14 @@ def index():
     if not current_user.is_authenticated():
         # if user is logged in we get out of here
         return redirect(url_for('login'))
-    query = db.session.query(Challenges.category.distinct().label("category"))
-    challenges = Challenges.query.all()
-    categories = [row.category for row in query.all()]
-    ranking = rank(current_user.username)
-    return render_template('index.html', challenges=challenges, categories=categories, ranking=ranking)
+    if current_user.username == "test":
+        return redirect(url_for('admin.index'))
+    else:
+        query = db.session.query(Challenges.category.distinct().label("category"))
+        challenges = Challenges.query.all()
+        categories = [row.category for row in query.all()]
+        ranking = rank(current_user.username)
+        return render_template('index.html', challenges=challenges, categories=categories, ranking=ranking)
 
 @app.route('/register', methods=['GET','POST'])
 def register():
@@ -195,16 +209,19 @@ def register():
                        email=form.email.data,
 		       password=form.password.data,
 		       school=form.school.data,
+		       realname=form.realname.data,
+                 classname=form.classname.data,
 		       score='0',
-		       solved='*')
+		       solved='*',
+               confirmed=1)
 	db.session.add(user)
 	db.session.commit()
-        token = generate_confirmation_token(form.email.data)
-        confirm_url = url_for('confirm_email', token=token, _external=True)
-        html = render_template('email.html', confirm_url=confirm_url)
-        subject = "Please confirm your email"
-        send_email(form.email.data, subject, html)
-        flash('A confirmation email has been sent via email.', 'success')
+        # token = generate_confirmation_token(form.email.data)
+        # confirm_url = url_for('confirm_email', token=token, _external=True)
+        # html = render_template('email.html', confirm_url=confirm_url)
+        # subject = "Please confirm your email"
+        # send_email(form.email.data, subject, html)
+        # flash('A confirmation email has been sent via email.', 'success')
         flash('Regeist success.', 'success')
         return redirect(url_for('index'))
     return render_template('register.html', form=form)
@@ -258,25 +275,22 @@ def logout():
 @app.route('/rules')
 # @login_required
 def rules():
-    if current_user.is_authenticated():
-        return render_template('rules.html')
-    flash('Please login.')
-    return redirect(url_for('index'))
+    return render_template('rules.html')
 
 @app.route('/scoreboard')
 def scoreboard():
-    if not current_user.is_authenticated():
-        flash('Please login.')
-        return redirect(url_for('index'))
-    users = User.query.filter(User.username!='admin').order_by(desc(User.score)).all()
+    users = User.query.filter(User.username!='test').order_by(desc(User.score)).all()
+    for user in users:
+        user.score = int(user.score)
+    users_sort =sorted(users, key=attrgetter('score'),reverse=True)
     winners = []
     temps = []
-    for user in users :
+    for user in users_sort :
         if rank(user.username) == 1 :
 	    winners.append(user)
             temps.append(user.lastSubmit)
     winnertime = min(temps)
-    return render_template('scoreboard.html', users=users, winnertime=winnertime)
+    return render_template('scoreboard.html', users=users_sort, winnertime=winnertime)
 
 @app.route('/challenges/<challenge_name>',methods=["GET","POST"])
 def challenges(challenge_name):
